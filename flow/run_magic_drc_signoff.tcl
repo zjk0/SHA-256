@@ -1,6 +1,7 @@
+source [file join [file dirname [info script]] paths.tcl]
 # Magic DRC Signoff Script (16-1)
 # Reads DEF directly to avoid GDS layer mapping issues
-# PDK_ROOT must be set to /usr/local/share/pdk
+# Run via ./magic.sh to load the selected PDK technology.
 
 crashbackups stop
 drc euclidean on
@@ -9,13 +10,13 @@ drc on
 snap internal
 
 # Read LEF for std cell definitions
-lef read $env(PDK_ROOT)/sky130A/libs.ref/sky130_fd_sc_hd/techlef/sky130_fd_sc_hd__nom.tlef
-lef read $env(PDK_ROOT)/sky130A/libs.ref/sky130_fd_sc_hd/lef/sky130_fd_sc_hd.lef
+lef read $PDK_DIR/libs.ref/sky130_fd_sc_hd/techlef/sky130_fd_sc_hd__nom.tlef
+lef read $PDK_DIR/libs.ref/sky130_fd_sc_hd/lef/sky130_fd_sc_hd.lef
 
 # Read GDS for std cell layouts (for actual DRC)
 gds flatglob *__example_*
 gds flatten true
-gds read $env(PDK_ROOT)/sky130A/libs.ref/sky130_fd_sc_hd/gds/sky130_fd_sc_hd.gds
+gds read $PDK_DIR/libs.ref/sky130_fd_sc_hd/gds/sky130_fd_sc_hd.gds
 
 # Read DEF (Magic maps layers correctly from DEF via LEF)
 def read SHA256_15ns.def
@@ -38,7 +39,7 @@ puts $ofile "============================================"
 puts $ofile "Cell: SHA256"
 puts $ofile "DEF:  SHA256_15ns.def"
 puts $ofile "PDK:  sky130A"
-puts $ofile "Magic: 8.3.681"
+puts $ofile "Magic: see the tool version in the run log"
 puts $ofile "============================================"
 puts $ofile ""
 puts $ofile "DRC errors for cell SHA256"
@@ -69,3 +70,6 @@ puts stdout "============================================"
 puts stdout "Total DRC violations: $errcount"
 puts stdout "============================================"
 puts stdout "Report saved to SHA256_15ns_magic_drc_signoff.rpt"
+if {$errcount > 0} {
+    error "Magic DRC failed: $errcount violations"
+}

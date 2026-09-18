@@ -15,6 +15,8 @@
 | `config.json` | OpenLane 配置（设计名、时钟、面积、PDK 路径） |
 | `pin_order.cfg` | 引脚排列配置（需根据 Caravel pad frame 版本调整） |
 
+> 独立核心的本机/Docker 复现见 [REPRODUCE.zh-CN.md](../REPRODUCE.zh-CN.md)。以下是尚未验证的 Caravel 集成草案，需要匹配的 OpenLane 版本；单独的 OpenROAD builder 镜像不等于完整 OpenLane 环境。`config.json` 中的 PDK 路径已与本机 `/usr/local/share/pdk/sky130A` 一致。
+
 ## 集成步骤
 
 ### 1. 前置条件
@@ -37,13 +39,13 @@ export OPENLANE_ROOT=<openlane_path>
 
 ```bash
 # 复制 wrapper RTL
-cp /home/openroad/SHA-256/caravel/user_project_wrapper.v openlane/user_project_wrapper/
-cp /home/openroad/SHA-256/caravel/user_project_wrapper.sdc openlane/user_project_wrapper/
-cp /home/openroad/SHA-256/caravel/config.json openlane/user_project_wrapper/
-cp /home/openroad/SHA-256/caravel/pin_order.cfg openlane/user_project_wrapper/
+cp /home/zjk/SHA-256/caravel/user_project_wrapper.v openlane/user_project_wrapper/
+cp /home/zjk/SHA-256/caravel/user_project_wrapper.sdc openlane/user_project_wrapper/
+cp /home/zjk/SHA-256/caravel/config.json openlane/user_project_wrapper/
+cp /home/zjk/SHA-256/caravel/pin_order.cfg openlane/user_project_wrapper/
 
 # 复制 SHA256 核心RTL（SHA256.v 通过 `include 包含所有子模块）
-cp /home/openroad/SHA-256/Verilog/*.v openlane/user_project_wrapper/
+cp /home/zjk/SHA-256/Verilog/*.v openlane/user_project_wrapper/
 ```
 
 ### 3. 运行 OpenLane flow

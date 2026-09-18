@@ -1,5 +1,7 @@
 # SHA-256 ASIC — Full Open-Source Signoff Flow
 
+> **Local reproduction:** see [REPRODUCE.zh-CN.md](REPRODUCE.zh-CN.md) for Docker OpenROAD, the installed PDK, verified local steps and missing LVS dependencies. Existing signoff metrics are historical results.
+
 ![sky130](https://img.shields.io/badge/sky130-130nm-blue)
 ![OpenROAD](https://img.shields.io/badge/OpenROAD-26Q3-orange)
 ![Yosys](https://img.shields.io/badge/Yosys-synthesis-lightgrey)
@@ -188,45 +190,24 @@ Reference paper: [Custom ASIC Design for SHA-256 Using Open-Source Tools](https:
 
 ## Quick Start
 
-### Requirements
-
-- **OS**: Windows 11 + WSL2 Ubuntu (or native Linux)
-- **PDK**: sky130A (via open_pdks)
-- **Tools**: OpenROAD 26Q3, Yosys, Magic 8.3+, Netgen 1.5+, Icarus Verilog
-
-### RTL Simulation
+For the local PDK + Docker setup, see [the reproduction guide (Chinese)](REPRODUCE.zh-CN.md). Run simulation, synthesis, Magic and Netgen on the host; run OpenROAD in the installed image.
 
 ```bash
-cd Verilog
-iverilog -o sha256_sim SHA256.v SHA256_testbench.v
-vvp sha256_sim
+cd /home/zjk/SHA-256
+export OPENROAD_MODE=docker DOCKER_SUDO=1
+export OPENROAD_IMAGE=openroad/flow-ubuntu22.04-builder:9ed603
+./flow/check_env.sh --local
+./flow/run_sim.sh rtl
+./flow/run_synth.sh
+./flow/run_sim.sh synth
+./flow/openroad.sh -version
+./flow/openroad.sh -no_init -exit openroad_flow_15ns_signoff.tcl
+./flow/run_sim.sh gate
 ```
 
-### OpenROAD Flow (15 ns signoff)
+The default PDK is `/usr/local/share/pdk/sky130A`. Paths are resolved from the checkout; `run_synth.sh` renders the Yosys path templates. `./flow/run_all.sh --pnr-only` runs through PnR and gate functional simulation.
 
-```bash
-cd flow
-openroad -no_init openroad_flow_15ns_signoff.tcl
-```
-
-### Signoff Reports
-
-```bash
-# Area report
-openroad -no_init run_area_report.tcl
-
-# Power + IR drop
-openroad -no_init run_power_ir_signoff.tcl
-
-# Real IR drop solver
-openroad -no_init run_ir_drop_real.tcl
-
-# DRC
-magic -dnull -noconsole < run_magic_drc_signoff.tcl
-
-# LVS (std-cell level)
-python3 run_lvs_v6_pos.py
-```
+After PnR, use `./flow/magic.sh run_magic_drc_signoff.tcl` for Magic DRC and `./flow/openroad.sh -no_init -exit run_ir_drop_real.tcl` for IR analysis. The checkout is missing the upstream `lvs.py` and `strip_parasitics.py` helpers, so full LVS is not currently reproducible. `run_lvs_v6_pos.py` targets old 14.3 ns artifacts; the 15 ns connectivity comparison is `run_lvs_15ns.py` once its parser is restored.
 
 ### Evidence Files
 

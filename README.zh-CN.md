@@ -1,5 +1,7 @@
 # SHA-256 ASIC — 开源全流程设计与签核
 
+> **本机复现入口**：[REPRODUCE.zh-CN.md](REPRODUCE.zh-CN.md)。下文的作者环境、指标和签核记录为历史资料；请以该复现说明及本机新运行结果为准。
+
 ![sky130](https://img.shields.io/badge/sky130-130nm-blue)
 ![OpenROAD](https://img.shields.io/badge/OpenROAD-26Q3-orange)
 ![Yosys](https://img.shields.io/badge/Yosys-综合-lightgrey)
@@ -182,47 +184,26 @@ SHA-256 压缩函数的关键路径穿过 **40 级组合逻辑**（以 `a21oi`/`
 
 ## 快速开始
 
-### 环境要求
-
-- **OS**: Windows 11 + WSL2 Ubuntu (或原生 Linux)
-- **PDK**: sky130A (通过 open_pdks 安装)
-- **工具**: OpenROAD 26Q3, Yosys, Magic 8.3+, Netgen 1.5+, Icarus Verilog
-
-### RTL 仿真
+当前环境的完整步骤见 [本机复现说明](REPRODUCE.zh-CN.md)。推荐本地运行 Yosys/Icarus/Magic/Netgen，OpenROAD 使用已有 Docker 镜像。
 
 ```bash
-cd Verilog
-iverilog -o sha256_sim SHA256.v SHA256_testbench.v
-vvp sha256_sim
+cd /home/zjk/SHA-256
+export OPENROAD_MODE=docker DOCKER_SUDO=1
+export OPENROAD_IMAGE=openroad/flow-ubuntu22.04-builder:9ed603
+./flow/check_env.sh --local
+./flow/run_sim.sh rtl
+./flow/run_synth.sh
+./flow/run_sim.sh synth
+./flow/openroad.sh -version
+./flow/openroad.sh -no_init -exit openroad_flow_15ns_signoff.tcl
+./flow/run_sim.sh gate
 ```
 
-### OpenROAD 流程（15ns 签核版）
+本地 PDK 默认是 `/usr/local/share/pdk/sky130A`。Tcl 路径自动定位；综合使用 `run_synth.sh` 渲染路径模板。也可用 `./flow/run_all.sh --pnr-only` 执行到布局布线后功能仿真。
 
-```bash
-cd flow
-openroad -no_init openroad_flow_15ns_signoff.tcl
-```
+PnR 完成后，可执行 `./flow/magic.sh run_magic_drc_signoff.tcl` 和 `./flow/openroad.sh -no_init -exit run_ir_drop_real.tcl` 等检查。
 
-### 签核报告
-
-```bash
-# 面积报告
-openroad -no_init run_area_report.tcl
-
-# 功耗 + IR drop
-openroad -no_init run_power_ir_signoff.tcl
-
-# 真实 IR drop 求解
-openroad -no_init run_ir_drop_real.tcl
-
-# DRC
-magic -dnull -noconsole < run_magic_drc_signoff.tcl
-
-# LVS (标准单元级)
-python3 run_lvs_v6_pos.py
-```
-
-> **✅ 最终版图已随仓库分发**：`flow/SHA256_15ns_full.gds`（约 20 MB，可流片完整 mask）已纳入版本控制，clone 即可获取，无需重新跑流程。其余 `.gds` 中间产物由 `.gitignore` 忽略。
+**当前限制**：完整 LVS 缺少仓库未提交的 `lvs.py`、`strip_parasitics.py`；旧 `run_lvs_v6_pos.py` 对应 14.3 ns 产物。历史报告不等同于本机签核通过，详见复现说明。仓库自带的 `flow/SHA256_15ns_full.gds` 是作者历史版图，可直接用 KLayout 查看。
 
 ---
 

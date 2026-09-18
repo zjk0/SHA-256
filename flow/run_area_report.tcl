@@ -1,11 +1,11 @@
 # 17-4 面积/利用率格式化报告
 # 产出: SHA256_15ns_area_utilization.rpt
 
-set PDK /usr/local/share/pdk/sky130A
+source [file join [file dirname [info script]] paths.tcl]
 
 # 读 LEF
-read_lef $PDK/libs.ref/sky130_fd_sc_hd/techlef/sky130_fd_sc_hd__nom.tlef
-read_lef $PDK/libs.ref/sky130_fd_sc_hd/lef/sky130_fd_sc_hd.lef
+read_lef $PDK_DIR/libs.ref/sky130_fd_sc_hd/techlef/sky130_fd_sc_hd__nom.tlef
+read_lef $PDK_DIR/libs.ref/sky130_fd_sc_hd/lef/sky130_fd_sc_hd.lef
 
 # 读 DEF
 read_def SHA256_15ns.def

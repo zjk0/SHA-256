@@ -3,15 +3,14 @@
 // 用途：
 //   - RTL 模式：编译时加载 Verilog/*.v（SHA256.v 等子模块），验证算法时序正确
 //   - Gate-Level 模式：编译时加载 SHA256_15ns_final.v + sky130_fd_sc_hd.v 模型
-//     DUT 顶层多 VDD/VSS supply pin — 本 tb 自动条件连接
+//     默认网表省略电源引脚；仅在定义 USE_POWER_PINS 时连接 VDD/VSS
 // 用法：
 //   // RTL mode
 //   iverilog -g2012 -I../Verilog -o fips_rtl.vvp fips_180_4_post_sim_tb.v ../Verilog/SHA256.v
 //   vvp fips_rtl.vvp
-//   // Gate-level mode (need sky130 sim models)
-//   iverilog -g2012 -D POSTLAYOUT -o fips_postsim.vvp fips_180_4_post_sim_tb.v \
-//            SHA256_15ns_final.v /path/to/sky130_fd_sc_hd.v
-//   vvp fips_postsim.vvp
+//   // Recommended from repository root (loads installed PDK models):
+//   ./flow/run_sim.sh synth
+//   ./flow/run_sim.sh gate
 // ============================================================================
 `timescale 1ns / 1ps
 
@@ -60,9 +59,12 @@ module fips_180_4_post_sim_tb ();
         .eoc(wb_eoc),
         .data_in (wb_data_in),
         .data_out(wb_data_out),
-        .data_oe (wb_data_oe),
+        .data_oe (wb_data_oe)
+`ifdef USE_POWER_PINS
+        ,
         .VDD(wb_VDD),
         .VSS(wb_VSS)
+`endif
     );
 `else
     SHA256 DUT (
@@ -308,8 +310,13 @@ module fips_180_4_post_sim_tb ();
         $display("");
         $display("==================================================");
 `ifdef POSTLAYOUT
+`ifdef SYNTHESIS_SIM
+        $display(" FIPS 180-4 — POST-SYNTHESIS Functional Simulation");
+        $display(" (SHA256_synth.v + installed PDK models)");
+`else
         $display(" FIPS 180-4 — GATE-LEVEL Post-PnR Simulation");
         $display(" (SHA256_15ns_final.v + sky130 stdcell sim models)");
+`endif
 `else
         $display(" FIPS 180-4 — RTL Simulation");
         $display(" (Verilog SHA256.v + submodules)");

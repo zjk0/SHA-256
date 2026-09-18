@@ -1,3 +1,4 @@
+source [file join [file dirname [info script]] paths.tcl]
 # Magic signoff DRC script for SHA256_15ns_full.gds
 # Usage: magic -noconsole -dnull -rcfile sky130A.magicrc -Tcl run_magic_drc.tcl
 

@@ -8,6 +8,12 @@
 *.cdl
 
 # Temporary files
+flow/.build/
+flow/SHA256_synth*.v
+flow/SHA256*_final.v
+*.vcd
+*.ext
+*.mag
 *.log
 *.tmp
 *~
@@ -44,6 +50,7 @@ flow/sky130_sim/__pycache__/
 
 # 调试/检查/诊断/测试脚本
 flow/check_*.sh
+!flow/check_env.sh
 flow/check_*.ps1
 flow/debug_*.py
 flow/debug_*.tcl
@@ -113,7 +120,5 @@ flow/fix_antenna_and_route_drc.tcl
 flow/fix_antenna_v2.tcl
 flow/repair_antennas.tcl
 flow/build_magic_netgen_direct.sh
-flow/lvs.py
 flow/schematic_cdl_v3_libcdl_aligned.py
 flow/netgen_run_lvs.sh
-flow/strip_parasitics.py

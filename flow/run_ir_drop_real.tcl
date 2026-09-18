@@ -5,14 +5,17 @@
 # 注意: check_power_grid 因 DEF 无电源终端会报 PSM-0025 致命错误，
 # 故跳过，直接用 -vsrc 提供 C4 bump 电压源注入点。
 
-set PDK /usr/local/share/pdk/sky130A
+source [file join [file dirname [info script]] paths.tcl]
 
 # 读取设计
-read_lef $PDK/libs.ref/sky130_fd_sc_hd/techlef/sky130_fd_sc_hd__nom.tlef
-read_lef $PDK/libs.ref/sky130_fd_sc_hd/lef/sky130_fd_sc_hd.lef
+read_lef $PDK_DIR/libs.ref/sky130_fd_sc_hd/techlef/sky130_fd_sc_hd__nom.tlef
+read_lef $PDK_DIR/libs.ref/sky130_fd_sc_hd/lef/sky130_fd_sc_hd.lef
 read_def SHA256_15ns.def
-read_liberty $PDK/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib
+read_liberty $PDK_DIR/libs.ref/sky130_fd_sc_hd/lib/sky130_fd_sc_hd__tt_025C_1v80.lib
 read_sdc SHA256_15ns.sdc
+read_spef SHA256_15ns.spef
+set_propagated_clock [all_clocks]
+source $PLATFORM_DIR/sky130hd.rc
 
 puts "============================================"
 puts "SHA-256 真实 IR drop 求解 (17-6)"

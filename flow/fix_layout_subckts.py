@@ -12,10 +12,12 @@ Solution:
 """
 import os, re
 
+from paths import LIB_DIR
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(HERE, 'SHA256_15ns_transistor_nopar.spice')
 DST = os.path.join(HERE, 'SHA256_15ns_transistor_lib.spice')
-LIB_SPICE = '/usr/local/share/pdk/sky130A/libs.ref/sky130_fd_sc_hd/spice/sky130_fd_sc_hd.spice'
+LIB_SPICE = str(LIB_DIR / "spice" / "sky130_fd_sc_hd.spice")
 
 # Step 1: Build port map from library SPICE
 lib_ports = {}

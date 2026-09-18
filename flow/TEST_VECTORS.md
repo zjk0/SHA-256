@@ -41,7 +41,7 @@
 预期哈希: 248d6a61d20638b8e5c026930c3e6039a33ce45964ff2167f6ecedd419db06c1
 ```
 
-验证要点：此消息长度超过一个 512-bit 块边界，测试多块处理逻辑。
+验证要点：448 bit 消息加上填充和长度字段后需要两个 512-bit 块，可用于将来验证多块处理逻辑。
 
 ### 向量 4: 百万字符
 
@@ -51,7 +51,7 @@
 预期哈希: cdc76e5c9914fb9281a1c7e284d73e67f1809a48a497200e046d39ccc7112cd0
 ```
 
-验证要点：大规模输入，测试长消息处理和内存管理。本项目后仿未覆盖此向量（仿真时间过长），但 RTL 仿真可跑。
+验证要点：大规模输入，测试长消息处理和内存管理。当前 RTL 缺少多块链接状态，因此未覆盖此向量。
 
 ## 3. 本项目验证结果
 
@@ -59,62 +59,30 @@
 |------|---------|-------------------|------|
 | 1: 空串 | PASS | PASS | ✅ |
 | 2: "abc" | PASS | PASS | ✅ |
-| 3: 多块 | PASS | 未测 | ⚠️ (可选) |
+| 3: 多块 | 当前 RTL 不支持 | 当前 RTL 不支持 | 不在验证范围 |
 | 4: 百万字符 | 未测 | 未测 | ⚠️ (可选) |
 
-> **结论**：向量 1 和 2 在 RTL 和门级后仿均通过，覆盖了空输入、单块和基本多块场景，满足功能验证要求。
+> 向量 1 和 2 都是单块消息。当前 `wvar.v` 在每次 `soc` 时重载固定 IV，尚不支持跨块链接。历史后仿结果与本机新运行结果应区分。
 
 ## 4. 输入格式说明
 
-本设计的输入接口为 32-bit Wishbone 总线：
+独立核心接口是 `data_in[31:0]`、`data_out[31:0]`、`data_oe` 和 `clk/rst/soc/rd/eoc`，并非 Wishbone。`caravel/` 才是独立的 Wishbone 集成草案。
 
-| 信号 | 宽度 | 说明 |
-|------|------|------|
-| `wb_data_in` | 32 | 输入数据（大端序） |
-| `wb_data_out` | 32 | 输出哈希（大端序） |
-| `wb_addr` | 32 | 寄存器地址 |
-| `wb_we` | 1 | 写使能 |
-| `wb_stb` | 1 | 选通 |
-| `wb_ack` | 1 | 应答 |
-| `ready` | 1 | 哈希计算完成 |
-
-### 数据写入顺序
-
-以 "abc" 为例（ASCII 编码）：
-```
-写入 1: wb_data_in = 0x61626300  ("abc" + padding)
-写入 2: wb_data_in = 0x80000000  (终止符 + padding)
-```
-
-### 哈希读取顺序
-
-8 个 32-bit 字，大端序拼接：
-```
-读取 1-8: wb_data_out = [ba7816bf, 8f01cfea, 414140de, 5dae2223,
-                          b00361a3, 96177a9c, b410ff61, f20015ad]
-```
+以 `abc` 为例，填充后的输入字为 `0x61626380`、14 个零字、`0x00000018`，共 16 字（512 bit）。输出按 H0～H7 读取 8 个 32-bit 字。
 
 ## 5. 运行测试
 
-### RTL 仿真
+从项目根目录执行：
 
 ```bash
-cd Verilog
-iverilog -o sha256_sim SHA256.v SHA256_testbench.v
-vvp sha256_sim
+./flow/run_sim.sh rtl
+./flow/run_synth.sh
+./flow/run_sim.sh synth
+# OpenROAD 完成、生成 SHA256_15ns_final.v 后：
+./flow/run_sim.sh gate
 ```
 
-测试平台 `SHA256_testbench.v` 读取 `tb_data.txt` 中的输入/输出对，自动比对。
-
-### 门级后仿 (Post-PnR)
-
-```bash
-cd flow
-iverilog -I ../Verilog -o sha256_gate_sim fips_180_4_post_sim_tb.v
-vvp sha256_gate_sim
-```
-
-后仿测试平台 `fips_180_4_post_sim_tb.v` 包含 FIPS 180-4 向量 1 和 2，直接硬编码在测试文件中。
+三个模式均使用 `flow/fips_180_4_post_sim_tb.v`。综合网表和布局后网表使用安装 PDK 的标准单元功能模型，未回标 SDF；物理时序需另看 STA。`Verilog/SHA256_testbench.v` 保留了旧接口，不能使用其原来的编译命令测试当前 RTL。
 
 ## 6. 参考资源
 

@@ -30,7 +30,8 @@ VERILOG_FILE  = os.path.join(HERE, "SHA256_14.3ns_final.v")
 OUT_LAYOUT    = os.path.join(HERE, "SHA256_14.3ns.layout.v6.spi")
 OUT_SCHEMATIC = os.path.join(HERE, "SHA256_14.3ns.schematic.v6.spi")
 REPORT        = os.path.join(HERE, "SHA256.netgen_lvs.v6.report")
-SETUP         = "/usr/local/share/pdk/sky130A/libs.tech/netgen/sky130A_setup.tcl"
+from paths import PDK_DIR
+SETUP = str(PDK_DIR / "libs.tech" / "netgen" / (PDK_DIR.name + "_setup.tcl"))
 
 # ---------------- filters ----------------
 PHYSICAL_HINTS = ("FILL", "TAP", "DIODE", "ANTENNA", "DECAP", "DEF_FILL",

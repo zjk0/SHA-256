@@ -1,9 +1,9 @@
 # OpenROAD antenna + placement DRC signoff
 # Reads DEF and runs check_antennas + check_placement
-set PDK /usr/local/share/pdk/sky130A
+source [file join [file dirname [info script]] paths.tcl]
 
-read_lef $PDK/libs.ref/sky130_fd_sc_hd/techlef/sky130_fd_sc_hd__nom.tlef
-read_lef $PDK/libs.ref/sky130_fd_sc_hd/lef/sky130_fd_sc_hd.lef
+read_lef $PDK_DIR/libs.ref/sky130_fd_sc_hd/techlef/sky130_fd_sc_hd__nom.tlef
+read_lef $PDK_DIR/libs.ref/sky130_fd_sc_hd/lef/sky130_fd_sc_hd.lef
 read_def SHA256_15ns.def
 
 # 16-3: Antenna check

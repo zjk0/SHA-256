@@ -10,10 +10,10 @@ output pin + ≤8 inputs. Prints:
 """
 from __future__ import annotations
 import sys, os, re, itertools
-sys.path.insert(0, r"d:\OpenROAD\SHA-256\flow")
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from gen_sky130_minimal_bb import CELLS, PHYS_CELLS
 
-LIB_PATH = r"d:\OpenROAD\SHA-256\flow\sky130_sim\_lib_cells.txt"
+LIB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "_lib_cells.txt")
 MY_CELLS = {m: (out, ins, body) for (m, out, ins, body) in CELLS}
 PHYS = {m for m, *_ in PHYS_CELLS}
 

@@ -1,17 +1,17 @@
 # OpenROAD flow for LDFranck/SHA-256 -> sky130hd
 # Based on OpenROAD official aes_sky130hd flow framework
 
-set PDK /home/openroad/OpenROAD/test/sky130hd
+source [file join [file dirname [info script]] paths.tcl]
 
 # ===== Read design =====
-read_lef $PDK/sky130hd.tlef
-read_lef $PDK/sky130hd_std_cell.lef
-read_liberty $PDK/sky130hd_tt.lib
-read_verilog /home/openroad/SHA-256/flow/SHA256_synth.v
+read_lef $TECH_LEF
+read_lef $CELL_LEF
+read_liberty $LIBERTY
+read_verilog SHA256_synth.v
 link_design SHA256
-read_sdc /home/openroad/SHA-256/flow/SHA256.sdc
+read_sdc SHA256.sdc
 
-set_thread_count 8
+set_thread_count $OPENROAD_THREADS
 
 # ===== Floorplan =====
 initialize_floorplan -site unithd \
@@ -19,7 +19,7 @@ initialize_floorplan -site unithd \
   -core_area {20 20 580 580}
 
 # Load routing tracks (REQUIRED for place_pins)
-source $PDK/sky130hd.tracks
+source $PLATFORM_DIR/sky130hd.tracks
 
 # remove buffers inserted by synthesis
 remove_buffers
@@ -28,7 +28,7 @@ remove_buffers
 tapcell -distance 14 -tapcell_master sky130_fd_sc_hd__tapvpwrvgnd_1
 
 # ===== Power distribution =====
-source $PDK/sky130hd.pdn.tcl
+source $PLATFORM_DIR/sky130hd.pdn.tcl
 pdngen
 
 # ===== Global placement =====
@@ -45,7 +45,7 @@ place_pins -hor_layers met3 -ver_layers met2
 global_placement -routability_driven -density 0.6 -pad_left 4 -pad_right 4
 
 # ===== Repair =====
-source $PDK/sky130hd.rc
+source $PLATFORM_DIR/sky130hd.rc
 set_wire_rc -signal -layer met2
 set_wire_rc -clock -layer met5
 
@@ -72,7 +72,7 @@ pin_access
 global_route -congestion_iterations 100
 repair_antennas -iterations 5
 check_antennas
-detailed_route -output_drc /home/openroad/SHA-256/flow/route_drc.rpt
+detailed_route -output_drc route_drc.rpt
 repair_antennas
 detailed_route
 
@@ -81,19 +81,19 @@ filler_placement sky130_fd_sc_hd__fill_*
 check_placement
 
 # ===== Extraction & Reports =====
-extract_parasitics -ext_model_file $PDK/sky130hd.rcx_rules
-write_spef /home/openroad/SHA-256/flow/SHA256.spef
-read_spef /home/openroad/SHA-256/flow/SHA256.spef
+extract_parasitics -ext_model_file $PLATFORM_DIR/sky130hd.rcx_rules
+write_spef SHA256.spef
+read_spef SHA256.spef
 
-report_checks -path_delay min_max -format full_clock_expanded -fields {input_pin slew capacitance} -digits 3 > /home/openroad/SHA-256/flow/reports_checks.rpt
+report_checks -path_delay min_max -format full_clock_expanded -fields {input_pin slew capacitance} -digits 3 > reports_checks.rpt
 report_worst_slack -min -digits 3
 report_worst_slack -max -digits 3
 report_tns -digits 3
 report_clock_skew -digits 3
-report_power > /home/openroad/SHA-256/flow/reports_power.rpt
-report_design_area > /home/openroad/SHA-256/flow/reports_area.rpt
+report_power > reports_power.rpt
+report_design_area > reports_area.rpt
 
 # ===== Outputs =====
-write_db /home/openroad/SHA-256/flow/SHA256.odb
-write_def /home/openroad/SHA-256/flow/SHA256.def
-write_verilog /home/openroad/SHA-256/flow/SHA256_final.v
+write_db SHA256.odb
+write_def SHA256.def
+write_verilog SHA256_final.v

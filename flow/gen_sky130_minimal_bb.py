@@ -267,8 +267,8 @@ def main() -> None:
     print(f"[gen_bb] phys  modules : {total_phys}", file=sys.stderr)
     print(f"[gen_bb] TOTAL         : {total_logic+total_phys}", file=sys.stderr)
 
-    path = r"d:\OpenROAD\SHA-256\flow\sky130_sim\sky130_fd_sc_hd_minimal_bb.v"
     import os
+    path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "sky130_sim", "sky130_fd_sc_hd_minimal_bb.v")
     os.makedirs(os.path.dirname(path), exist_ok=True)
     with open(path, "w", encoding="utf-8", newline="\n") as f:
         f.write(txt)

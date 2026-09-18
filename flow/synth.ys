@@ -1,4 +1,5 @@
-read_verilog -sv /home/openroad/SHA-256/Verilog/SHA256.v
+# Path template: run with ./run_synth.sh (renders @...@ placeholders).
+read_verilog -sv -I"@PROJECT_ROOT@/Verilog" "@PROJECT_ROOT@/Verilog/SHA256.v"
 hierarchy -check -top SHA256
 proc
 flatten          # RESTORED: expansion protected by (* keep_hierarchy *)
@@ -9,9 +10,9 @@ memory
 opt
 techmap
 opt
-dfflibmap -liberty /home/openroad/OpenROAD/test/sky130hd/sky130hd_tt.lib
+dfflibmap -liberty "@LIBERTY@"
 opt
-abc -liberty /home/openroad/OpenROAD/test/sky130hd/sky130hd_tt.lib -script +strash;scorr;ifraig;retime,;map;print_stats
+abc -liberty "@LIBERTY@" -script +strash;scorr;ifraig;retime,;map;print_stats
 opt
 
 # Insert tie cells (conb) for constants 1/0 to avoid OpenROAD DRT-0305
@@ -19,4 +20,4 @@ hilomap -hicell sky130_fd_sc_hd__conb_1 HI -locell sky130_fd_sc_hd__conb_1 LO
 
 clean
 stat
-write_verilog -noattr /home/openroad/SHA-256/flow/SHA256_synth.v
+write_verilog -noattr "@FLOW_DIR@/SHA256_synth.v"

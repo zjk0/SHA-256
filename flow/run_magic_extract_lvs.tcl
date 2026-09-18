@@ -1,19 +1,20 @@
+source [file join [file dirname [info script]] paths.tcl]
 # Magic LVS-mode SPICE Extraction (16-2 Step 1, retry)
 # Uses ext2spice lvs to get LVS-friendly output
-# PDK_ROOT must be set to /usr/local/share/pdk
+# Run via ./magic.sh to load the selected PDK technology.
 
 crashbackups stop
 drc off
 snap internal
 
 # Read LEF for std cell definitions
-lef read $env(PDK_ROOT)/sky130A/libs.ref/sky130_fd_sc_hd/techlef/sky130_fd_sc_hd__nom.tlef
-lef read $env(PDK_ROOT)/sky130A/libs.ref/sky130_fd_sc_hd/lef/sky130_fd_sc_hd.lef
+lef read $PDK_DIR/libs.ref/sky130_fd_sc_hd/techlef/sky130_fd_sc_hd__nom.tlef
+lef read $PDK_DIR/libs.ref/sky130_fd_sc_hd/lef/sky130_fd_sc_hd.lef
 
 # Read GDS for std cell layouts (needed for transistor extraction)
 gds flatglob *__example_*
 gds flatten true
-gds read $env(PDK_ROOT)/sky130A/libs.ref/sky130_fd_sc_hd/gds/sky130_fd_sc_hd.gds
+gds read $PDK_DIR/libs.ref/sky130_fd_sc_hd/gds/sky130_fd_sc_hd.gds
 
 # Read DEF
 def read SHA256_15ns.def

@@ -1,8 +1,11 @@
+source [file join [file dirname [info script]] paths.tcl]
 # Netgen Transistor-Level LVS Script (16-2)
 # Run with: netgen -noconsole < run_transistor_lvs.tcl
 # Uses 'filename cellname' syntax to ensure correct circuit identification
 
-lvs "/tmp/lvs_layout/SHA256 SHA256" "/tmp/lvs_schematic/SHA256 SHA256" /usr/local/share/pdk/sky130A/libs.tech/netgen/sky130A_setup.tcl SHA256_15ns_transistor_lvs.report
+lvs [list [file join $FLOW_DIR .build lvs layout SHA256] SHA256] \
+    [list [file join $FLOW_DIR .build lvs schematic SHA256] SHA256] \
+    $NETGEN_SETUP SHA256_15ns_transistor_lvs.report
 
 puts ""
 puts "============================================"

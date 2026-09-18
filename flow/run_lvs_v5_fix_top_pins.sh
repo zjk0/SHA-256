@@ -12,13 +12,14 @@
 #
 # v5 Fix: rewrite schem CDL top SUBCKT pin list to match layout
 # ============================================================================
-set -e
-cd /home/openroad/SHA-256/flow
+set -euo pipefail
+source "$(dirname -- "${BASH_SOURCE[0]}")/env.sh"
+cd "$FLOW_DIR"
 
 SCHEM_V4=SHA256_schematic_libcdl_aligned.cdl
 SCHEM_V5=SHA256_schematic_v5_pinsfixed.cdl
 LAYOUT=SHA256_layout_stripped_nopar.spice
-SETUP=/usr/local/share/pdk/sky130A/libs.tech/netgen/sky130A_setup.tcl
+SETUP="$PDK_PATH/libs.tech/netgen/${PDK}_setup.tcl"
 REPORT=SHA256.netgen_lvs.v5.report
 
 echo "[LVS v5] Step 1: Build new 37-pin SUBCKT line (match DEF pin names)"
@@ -62,7 +63,7 @@ echo "[LVS v5] Step 5: Run Netgen batch LVS (blackbox stdcells via sky130A_setup
 echo "  netgen -batch lvs \"$LAYOUT SHA256\" \"$SCHEM_V5 SHA256\" \"$SETUP\" \"$REPORT\""
 echo "  Estimated time: 5-10 min (70k MOS, ~34k nets after flatten)"
 START=$(date +%s)
-netgen -batch lvs \
+"$NETGEN" -batch lvs \
   "$LAYOUT SHA256" \
   "$SCHEM_V5 SHA256" \
   "$SETUP" \

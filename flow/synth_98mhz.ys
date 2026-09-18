@@ -1,7 +1,8 @@
 # Yosys synthesis script for SHA-256 - optimized for 98MHz (10.2ns)
 # Changes from original: more aggressive abc script (dc2 + dretime + retime)
 
-read_verilog -sv /home/openroad/SHA-256/Verilog/SHA256.v
+# Path template: run with ./run_synth.sh synth_98mhz.ys.
+read_verilog -sv -I"@PROJECT_ROOT@/Verilog" "@PROJECT_ROOT@/Verilog/SHA256.v"
 hierarchy -check -top SHA256
 proc
 flatten
@@ -13,11 +14,11 @@ opt
 techmap
 opt -full
 
-dfflibmap -liberty /home/openroad/OpenROAD/test/sky130hd/sky130hd_tt.lib
+dfflibmap -liberty "@LIBERTY@"
 opt
 
 # Aggressive abc: dc2 (depth opt) + dretime (delay retiming) + retime,{2,1}
-abc -liberty /home/openroad/OpenROAD/test/sky130hd/sky130hd_tt.lib \
+abc -liberty "@LIBERTY@" \
     -script +strash;scorr;ifraig;dc2;dretime;retime,{2,1};map;print_stats
 opt
 
@@ -26,4 +27,4 @@ hilomap -hicell sky130_fd_sc_hd__conb_1 HI -locell sky130_fd_sc_hd__conb_1 LO
 
 clean
 stat
-write_verilog -noattr /home/openroad/SHA-256/flow/SHA256_synth_98mhz.v
+write_verilog -noattr "@FLOW_DIR@/SHA256_synth_98mhz.v"

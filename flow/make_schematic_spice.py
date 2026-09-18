@@ -5,12 +5,14 @@ This makes both layout and schematic sides use the same transistor format.
 """
 import os
 
+from paths import LIB_DIR
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 SRC = os.path.join(HERE, 'SHA256_15ns.schematic.v6pos.cdl')
 DST = os.path.join(HERE, 'SHA256_15ns_schematic_transistor.cdl')
 
-OLD_INCLUDE = '/usr/local/share/pdk/sky130A/libs.ref/sky130_fd_sc_hd/cdl/sky130_fd_sc_hd.cdl'
-NEW_INCLUDE = '/usr/local/share/pdk/sky130A/libs.ref/sky130_fd_sc_hd/spice/sky130_fd_sc_hd.spice'
+OLD_INCLUDE = str(LIB_DIR / "cdl" / "sky130_fd_sc_hd.cdl")
+NEW_INCLUDE = str(LIB_DIR / "spice" / "sky130_fd_sc_hd.spice")
 
 with open(SRC, 'r', encoding='utf-8', errors='replace') as f:
     content = f.read()

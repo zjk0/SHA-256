@@ -2,31 +2,31 @@
 # Key fix: run repair_antennas BOTH before and after detailed_route
 # detailed_route introduces new antenna violations that must be fixed post-route
 
-set PDK /home/openroad/OpenROAD/test/sky130hd
+source [file join [file dirname [info script]] paths.tcl]
 
 # ===== Read design =====
-read_lef $PDK/sky130hd.tlef
-read_lef $PDK/sky130hd_std_cell.lef
-read_liberty $PDK/sky130hd_tt.lib
-read_verilog /home/openroad/SHA-256/flow/SHA256_synth.v
+read_lef $TECH_LEF
+read_lef $CELL_LEF
+read_liberty $LIBERTY
+read_verilog SHA256_synth.v
 link_design SHA256
-read_sdc /home/openroad/SHA-256/flow/SHA256_15ns.sdc
+read_sdc SHA256_15ns.sdc
 
-set_thread_count 8
+set_thread_count $OPENROAD_THREADS
 
 # ===== Floorplan =====
 initialize_floorplan -site unithd \
   -die_area {0 0 600 600} \
   -core_area {20 20 580 580}
 
-source $PDK/sky130hd.tracks
+source $PLATFORM_DIR/sky130hd.tracks
 remove_buffers
 
 # ===== Tapcell =====
 tapcell -distance 14 -tapcell_master sky130_fd_sc_hd__tapvpwrvgnd_1
 
 # ===== Power =====
-source $PDK/sky130hd.pdn.tcl
+source $PLATFORM_DIR/sky130hd.pdn.tcl
 pdngen
 
 # ===== Global placement =====
@@ -38,7 +38,7 @@ place_pins -hor_layers met3 -ver_layers met2
 global_placement -routability_driven -density 0.6 -pad_left 4 -pad_right 4
 
 # ===== Repair =====
-source $PDK/sky130hd.rc
+source $PLATFORM_DIR/sky130hd.rc
 set_wire_rc -signal -layer met2
 set_wire_rc -clock -layer met5
 
@@ -74,14 +74,14 @@ global_route -congestion_iterations 100
 
 # Antenna repair pass 1 (before detailed_route)
 repair_antennas sky130_fd_sc_hd__diode_2 -iterations 20
-check_antennas -report_file /home/openroad/SHA-256/flow/antenna_pre_route.rpt
+check_antennas -report_file antenna_pre_route.rpt
 
-detailed_route -output_drc /home/openroad/SHA-256/flow/route_drc_15ns.rpt
+detailed_route -output_drc route_drc_15ns.rpt
 
 # Antenna repair pass 2 (after detailed_route - fixes new violations from re-routing)
 # Use -iterations 1 as recommended for detailed routing source
 repair_antennas sky130_fd_sc_hd__diode_2 -iterations 1
-check_antennas -report_file /home/openroad/SHA-256/flow/antenna_post_route.rpt
+check_antennas -report_file antenna_post_route.rpt
 
 # If still violations, try one more pass with jumper_only
 check_antennas
@@ -104,15 +104,15 @@ filler_placement sky130_fd_sc_hd__fill_*
 check_placement
 
 # ===== Final antenna signoff =====
-check_antennas -verbose -report_file /home/openroad/SHA-256/flow/SHA256_15ns_antenna_signoff.rpt
+check_antennas -verbose -report_file SHA256_15ns_antenna_signoff.rpt
 
 # ===== Route DRC signoff report =====
-set drc_file /home/openroad/SHA-256/flow/route_drc_15ns.rpt
+set drc_file route_drc_15ns.rpt
 set fp [open $drc_file r]
 set drc_content [read $fp]
 close $fp
 
-set signoff_file /home/openroad/SHA-256/flow/SHA256_15ns_route_drc_signoff.rpt
+set signoff_file SHA256_15ns_route_drc_signoff.rpt
 set fp [open $signoff_file w]
 puts $fp "============================================"
 puts $fp "Routing DRC Signoff Report"
@@ -130,29 +130,34 @@ if {[string length [string trim $drc_content]] == 0} {
 }
 puts $fp ""
 puts $fp "============================================"
-puts $fp "PASS: 0 routing DRC violations"
+if {[string length [string trim $drc_content]] == 0} {
+  puts $fp "PASS: 0 routing DRC violations in detailed_route report"
+} else {
+  puts $fp "FAIL: routing DRC report is not empty; inspect the violations above"
+}
+puts $fp "This report precedes post-route edits; verify the final DEF with Magic."
 puts $fp "============================================"
 close $fp
 
 # ===== Write outputs =====
-write_verilog /home/openroad/SHA-256/flow/SHA256_15ns_final.v
-write_db /home/openroad/SHA-256/flow/SHA256_15ns.odb
-write_def /home/openroad/SHA-256/flow/SHA256_15ns.def
+write_verilog SHA256_15ns_final.v
+write_db SHA256_15ns.odb
+write_def SHA256_15ns.def
 
 # ===== Extraction & Reports =====
 if {[catch {
-  extract_parasitics -ext_model_file $PDK/sky130hd.rcx_rules
-  write_spef /home/openroad/SHA-256/flow/SHA256_15ns.spef
-  read_spef /home/openroad/SHA-256/flow/SHA256_15ns.spef
-  report_checks -path_delay min_max -format full_clock_expanded -fields {input_pin slew capacitance} -digits 3 > /home/openroad/SHA-256/flow/reports_checks_15ns.rpt
+  extract_parasitics -ext_model_file $PLATFORM_DIR/sky130hd.rcx_rules
+  write_spef SHA256_15ns.spef
+  read_spef SHA256_15ns.spef
+  report_checks -path_delay min_max -format full_clock_expanded -fields {input_pin slew capacitance} -digits 3 > reports_checks_15ns.rpt
   report_worst_slack -min -digits 3
   report_worst_slack -max -digits 3
   report_tns -digits 3
   report_clock_skew -digits 3
-  report_power > /home/openroad/SHA-256/flow/reports_power_15ns.rpt
-  report_design_area > /home/openroad/SHA-256/flow/reports_area_15ns.rpt
+  report_power > reports_power_15ns.rpt
+  report_design_area > reports_area_15ns.rpt
 } err]} {
-  puts "WARNING: Extraction/timing reports skipped: $err"
+  error "Extraction/timing reports failed: $err"
 }
 
 puts "============================================================"

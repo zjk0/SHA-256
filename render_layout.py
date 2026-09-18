@@ -1,8 +1,10 @@
 import pya
+from pathlib import Path
 
-gds_path = "/home/openroad/SHA-256/flow/SHA256_15ns_full.gds"
-lyp_path = "/mnt/d/OpenROAD/SHA-256/sky130_colors.lyp"
-out_prefix = "/mnt/d/OpenROAD/SHA-256/layout_view"
+project_root = Path(__file__).resolve().parent
+gds_path = str(project_root / "flow" / "SHA256_15ns_full.gds")
+lyp_path = str(project_root / "sky130_colors.lyp")
+out_prefix = str(project_root / "layout_view")
 
 layout = pya.Layout()
 layout.read(gds_path)

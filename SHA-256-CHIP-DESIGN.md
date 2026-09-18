@@ -1,5 +1,7 @@
 # SHA-256 加密加速器芯片设计项目文档
 
+> **本机复现入口**：[REPRODUCE.zh-CN.md](REPRODUCE.zh-CN.md)。下文的作者环境、指标和签核记录为历史资料；请以该复现说明及本机新运行结果为准。
+
 > **项目目标**：用开源 EDA 工具链（Yosys + OpenROAD + Magic + Netgen），在 SkyWater 130nm 工艺（sky130）上，完整跑通一颗 SHA-256 加密加速器的 RTL → GDSII 设计流程，产出一份"能拿去流片"的完整闭环。
 >
 > **参考设计**：[LDFranck/SHA-256](https://github.com/LDFranck/SHA-256)（MDPI *Computers* 2024 论文同款，同工具链同工艺，数据可复现）

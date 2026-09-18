@@ -1,3 +1,4 @@
+source [file join [file dirname [info script]] paths.tcl]
 # Magic signoff DRC script — reads DEF (not GDS) to avoid layer mapping issues
 # Usage: magic -noconsole -dnull -rcfile sky130A.magicrc -Tcl run_magic_drc_def.tcl
 

@@ -18,14 +18,19 @@ import os, re, sys, subprocess, collections
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, HERE)
 
-from lvs import parse_def, parse_verilog
+try:
+    from lvs import parse_def, parse_verilog
+except ModuleNotFoundError as exc:
+    if exc.name != "lvs":
+        raise
+    sys.exit("Missing flow/lvs.py (not included in this checkout). Restore the upstream parser before running LVS; see REPRODUCE.zh-CN.md.")
 
-PDK_ROOT = "/usr/local/share/pdk"
-SKY130A  = os.path.join(PDK_ROOT, "sky130A")
+from paths import PDK_DIR
+SKY130A = str(PDK_DIR)
 LIBCDL   = os.path.join(SKY130A, "libs.ref", "sky130_fd_sc_hd", "cdl", "sky130_fd_sc_hd.cdl")
 DEF_FILE     = os.path.join(HERE, "SHA256_15ns.def")
 VERILOG_FILE = os.path.join(HERE, "SHA256_15ns_final.v")
-SETUP        = os.path.join(SKY130A, "libs.tech", "netgen", "sky130A_setup.tcl")
+SETUP        = os.path.join(SKY130A, "libs.tech", "netgen", PDK_DIR.name + "_setup.tcl")
 
 OUT_LAYOUT    = os.path.join(HERE, "SHA256_15ns.layout.v6pos.cdl")
 OUT_SCHEMATIC = os.path.join(HERE, "SHA256_15ns.schematic.v6pos.cdl")
@@ -154,17 +159,16 @@ def main():
         print(f"              WARNING unknown schem macros: {sst['unknown']}")
 
     print("[V6-pos-15ns] Step 4: Run Netgen LVS -blackbox")
-    shell_cmd = (
-        f'netgen -batch lvs '
-        f'"{OUT_LAYOUT} {top_name}" '
-        f'"{OUT_SCHEMATIC} {top_name}" '
-        f'{SETUP} {REPORT} -blackbox'
-    )
-    print("              CMD: " + shell_cmd)
+    command = [
+        os.environ.get("NETGEN", "netgen"), "-batch", "lvs",
+        f"{OUT_LAYOUT} {top_name}", f"{OUT_SCHEMATIC} {top_name}",
+        SETUP, REPORT, "-blackbox",
+    ]
+    print("              CMD: " + repr(command))
     sys.stdout.flush()
     env = os.environ.copy()
     env["MAGIC_EXT_USE_GDS"] = "1"
-    rc = subprocess.call(shell_cmd, shell=True, cwd=HERE, env=env)
+    rc = subprocess.call(command, cwd=HERE, env=env)
     print(f"[V6-pos-15ns] Netgen exit = {rc}")
 
     if os.path.exists(REPORT):

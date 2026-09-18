@@ -19,12 +19,14 @@ Solution:
 """
 import os, re, sys
 
+from paths import LIB_DIR
+
 HERE = os.path.dirname(os.path.abspath(__file__))
 LAYOUT_IN = os.path.join(HERE, 'SHA256_15ns_transistor_lib_fixed.spice')
 LAYOUT_OUT = os.path.join(HERE, 'SHA256_15ns_transistor_lvs_ready.spice')
 SCHEMATIC = os.path.join(HERE, 'SHA256_15ns_schematic_transistor.cdl')
 MAGIC_EXTRACTION = os.path.join(HERE, 'SHA256_15ns_transistor_nopar.spice')
-LIB_SPICE = '/usr/local/share/pdk/sky130A/libs.ref/sky130_fd_sc_hd/spice/sky130_fd_sc_hd.spice'
+LIB_SPICE = str(LIB_DIR / "spice" / "sky130_fd_sc_hd.spice")
 
 # Step 1: Read library SPICE pin order
 print("Step 1: Reading library SPICE pin order...")
